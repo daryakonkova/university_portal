@@ -16,8 +16,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Teacher') {
 $userId = $_SESSION['user_id'];
 $groupId = isset($_GET['group_id']) ? intval($_GET['group_id']) : 0;
 
+// Если группа не указана, перенаправляем на выбор группы
 if ($groupId <= 0) {
-    header("Location: groups.php?error=invalid_group");
+    header("Location: groups.php?error=select_group_first");
     exit;
 }
 
@@ -26,6 +27,11 @@ try {
     $stmt = $pdo->prepare("SELECT id, full_name FROM teachers WHERE user_id = ?");
     $stmt->execute([$userId]);
     $teacher = $stmt->fetch();
+
+    if (!$teacher) {
+        header("Location: ../../dashboard.php?error=profile_not_found");
+        exit;
+    }
     $teacherId = $teacher['id'];
 
     // 2. Получаем информацию о группе
@@ -38,7 +44,6 @@ try {
     }
 
     // 3. Получаем полное расписание группы
-    // Объединяем с дисциплинами, преподавателями и аудиториями
     $scheduleStmt = $pdo->prepare("
         SELECT 
             s.id, 
@@ -59,23 +64,15 @@ try {
     $scheduleStmt->execute([$groupId]);
     $scheduleItems = $scheduleStmt->fetchAll();
 
-    // Группируем расписание по дням недели для удобного вывода
-    $groupedSchedule = [
-        'ПН' => [], 'ВТ' => [], 'СР' => [],
-        'ЧТ' => [], 'ПТ' => [], 'СБ' => []
-    ];
-
+    // Группируем расписание по дням недели
+    $groupedSchedule = ['ПН' => [], 'ВТ' => [], 'СР' => [], 'ЧТ' => [], 'ПТ' => [], 'СБ' => []];
     foreach ($scheduleItems as $item) {
         $groupedSchedule[$item['day_of_week']][] = $item;
     }
 
     $daysFullNames = [
-        'ПН' => 'Понедельник',
-        'ВТ' => 'Вторник',
-        'СР' => 'Среда',
-        'ЧТ' => 'Четверг',
-        'ПТ' => 'Пятница',
-        'СБ' => 'Суббота'
+        'ПН' => 'Понедельник', 'ВТ' => 'Вторник', 'СР' => 'Среда',
+        'ЧТ' => 'Четверг', 'ПТ' => 'Пятница', 'СБ' => 'Суббота'
     ];
 
 } catch (Exception $e) {
@@ -87,34 +84,67 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Расписание <?php echo htmlspecialchars($group['group_name']); ?> | Витте.Портал</title>
+    <title>Расписание <?php echo htmlspecialchars($group['group_name'] ?? 'Группы'); ?> | Витте.Портал</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
+        .sidebar-link.active { background-color: #1e40af; color: white; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-900">
+<body class="bg-slate-50 min-h-screen flex">
 
-<div class="flex flex-col">
-    <!-- Навигация -->
+<!-- Sidebar (Боковое меню) -->
+<aside class="w-64 bg-slate-900 text-slate-300 flex flex-col h-screen sticky top-0 hidden md:flex">
+    <div class="p-6 border-b border-slate-800 flex items-center space-x-3">
+        <i class="fas fa-graduation-cap text-2xl text-blue-500"></i>
+        <span class="font-bold text-lg text-white">Витте.Портал</span>
+    </div>
+    <nav class="flex-1 px-4 py-6 space-y-2">
+        <a href="../../dashboard.php" class="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-slate-800 transition-all text-sm font-semibold">
+            <i class="fas fa-chart-line w-5"></i>
+            <span>Обзор</span>
+        </a>
+        <div class="pt-4 pb-2 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Преподаватель</div>
+        <a href="groups.php" class="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-slate-800 transition-all text-sm font-semibold">
+            <i class="fas fa-users w-5"></i>
+            <span>Мои группы</span>
+        </a>
+        <!-- Умные ссылки: подставляют текущий ID группы -->
+        <a href="schedule.php?group_id=<?php echo $groupId; ?>" class="sidebar-link active flex items-center space-x-3 px-4 py-3 rounded-xl transition-all text-sm font-semibold">
+            <i class="fas fa-calendar-alt w-5"></i>
+            <span>Расписание</span>
+        </a>
+        <a href="journal.php?group_id=<?php echo $groupId; ?>" class="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-slate-800 transition-all text-sm font-semibold">
+            <i class="fas fa-book w-5"></i>
+            <span>Журнал оценок</span>
+        </a>
+    </nav>
+    <div class="p-6 border-t border-slate-800">
+        <a href="../../api/auth.php?action=logout" class="flex items-center space-x-3 text-sm font-bold text-red-400 hover:text-red-300 transition-colors">
+            <i class="fas fa-sign-out-alt w-5"></i>
+            <span>Выйти</span>
+        </a>
+    </div>
+</aside>
+
+<!-- Основной контент -->
+<div class="flex-1 flex flex-col">
+    <!-- Верхняя навигация -->
     <nav class="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
         <div class="flex items-center space-x-4">
-            <a href="groups.php" class="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors">
-                <i class="fa-solid fa-arrow-left"></i>
-            </a>
             <div class="flex items-center space-x-2 text-sm">
                 <span class="text-slate-400">Преподаватель</span>
                 <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
-                <a href="groups.php" class="text-slate-400 hover:text-blue-600">Мои группы</a>
+                <a href="groups.php" class="text-slate-400 hover:text-blue-600 transition-colors">Мои группы</a>
                 <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
-                <span class="text-slate-900 font-semibold">График: <?php echo htmlspecialchars($group['group_name']); ?></span>
+                <span class="text-slate-900 font-semibold">График: <?php echo htmlspecialchars($group['group_name'] ?? ''); ?></span>
             </div>
         </div>
         <div class="flex items-center space-x-4">
             <div class="text-right hidden sm:block">
-                <div class="text-sm font-bold"><?php echo htmlspecialchars($teacher['full_name']); ?></div>
+                <div class="text-sm font-bold text-slate-800"><?php echo htmlspecialchars($teacher['full_name'] ?? ''); ?></div>
                 <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Просмотр расписания</div>
             </div>
             <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white border border-blue-700 shadow-lg shadow-blue-200">
@@ -126,7 +156,7 @@ try {
     <main class="p-8 max-w-7xl mx-auto w-full">
         <div class="mb-10">
             <h1 class="text-3xl font-black text-slate-900">Учебный график группы</h1>
-            <p class="text-slate-500 text-sm mt-1">Академическая группа: <span class="font-bold text-slate-700"><?php echo htmlspecialchars($group['group_name']); ?></span></p>
+            <p class="text-slate-500 text-sm mt-1">Академическая группа: <span class="font-bold text-blue-600"><?php echo htmlspecialchars($group['group_name'] ?? ''); ?></span></p>
         </div>
 
         <?php if (isset($error)): ?>
@@ -136,6 +166,7 @@ try {
             </div>
         <?php endif; ?>
 
+        <!-- Сетка расписания -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <?php foreach ($groupedSchedule as $dayCode => $lessons): ?>
                 <div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
@@ -150,22 +181,22 @@ try {
                         <?php if (empty($lessons)): ?>
                             <div class="flex flex-col items-center justify-center py-10 opacity-30">
                                 <i class="fa-solid fa-mug-hot text-2xl mb-2"></i>
-                                <p class="text-[10px] font-bold uppercase tracking-tighter">Занятий нет</p>
+                                <p class="text-[10px] font-bold uppercase tracking-tighter text-center">Занятий нет</p>
                             </div>
                         <?php else: ?>
                             <?php foreach ($lessons as $lesson): ?>
                                 <?php
                                 $isMyLesson = ($lesson['teacher_record_id'] == $teacherId);
-                                $cardClass = $isMyLesson ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'bg-white border border-slate-100 text-slate-900';
+                                $cardClass = $isMyLesson ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-white border border-slate-100 text-slate-900 hover:border-slate-300';
                                 $timeClass = $isMyLesson ? 'text-blue-100' : 'text-slate-400';
                                 $teacherClass = $isMyLesson ? 'text-blue-50' : 'text-slate-500';
                                 ?>
-                                <div class="p-5 rounded-2xl transition-all <?php echo $cardClass; ?>">
+                                <div class="p-5 rounded-2xl transition-all duration-300 <?php echo $cardClass; ?>">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="text-[11px] font-black uppercase tracking-widest <?php echo $timeClass; ?>">
                                             <?php echo date('H:i', strtotime($lesson['time_start'])); ?> — <?php echo date('H:i', strtotime($lesson['time_end'])); ?>
                                         </div>
-                                        <div class="px-2 py-0.5 rounded text-[9px] font-bold uppercase <?php echo $isMyLesson ? 'bg-white/20' : 'bg-slate-100 text-slate-500'; ?>">
+                                        <div class="px-2 py-0.5 rounded text-[9px] font-bold uppercase <?php echo $isMyLesson ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'; ?>">
                                             Ауд. <?php echo htmlspecialchars($lesson['room_number']); ?>
                                         </div>
                                     </div>
@@ -184,27 +215,28 @@ try {
             <?php endforeach; ?>
         </div>
 
-        <div class="mt-12 flex items-center justify-between p-8 bg-white rounded-[2rem] border border-slate-200 shadow-sm">
+        <!-- Нижняя панель действий -->
+        <div class="mt-12 flex flex-col md:flex-row items-center justify-between p-8 bg-white rounded-[2rem] border border-slate-200 shadow-sm gap-6">
             <div class="flex items-center space-x-4">
-                <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0">
                     <i class="fa-solid fa-info-circle text-xl"></i>
                 </div>
                 <div>
-                    <h4 class="font-bold text-sm text-slate-900">Информация для преподавателя</h4>
-                    <p class="text-xs text-slate-500">Синим цветом выделены ваши занятия. Вы можете перейти в журнал для выставления оценок.</p>
+                    <h4 class="font-bold text-sm text-slate-900">Переход к учебной ведомости</h4>
+                    <p class="text-xs text-slate-500">Вы можете быстро перейти в журнал для выставления оценок этой группе по вашей дисциплине.</p>
                 </div>
             </div>
-            <div class="flex space-x-3">
-                <a href="journal.php?group_id=<?php echo $groupId; ?>" class="bg-slate-900 text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-black transition-all">
-                    Открыть журнал
+            <div class="flex space-x-3 w-full md:w-auto">
+                <a href="journal.php?group_id=<?php echo $groupId; ?>" class="w-full md:w-auto text-center bg-slate-900 text-white px-8 py-3 rounded-xl text-xs font-bold hover:bg-black transition-all shadow-lg shadow-slate-200">
+                    Открыть журнал оценок
                 </a>
             </div>
         </div>
     </main>
-</div>
 
-<footer class="mt-20 py-10 text-center">
-    <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Корпоративный портал • Модуль "Расписание" • 2025</p>
-</footer>
+    <footer class="mt-auto py-10 text-center">
+        <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Корпоративный портал • Модуль "Расписание" • 2025</p>
+    </footer>
+</div>
 </body>
 </html>
