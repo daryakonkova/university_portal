@@ -107,7 +107,7 @@ if (isset($_SESSION['user_id'])) {
 
     <!-- Подвал -->
     <div class="mt-8 text-center text-slate-400 text-[10px] uppercase tracking-[0.2em] font-bold">
-        © 2025 Московский университет им. С.Ю. Витте
+        © 2025 Коньюкова Дарья Дмитриевна | Московский университет им. С.Ю. Витте
     </div>
 </div>
 

@@ -227,7 +227,7 @@ try {
         </div>
     </div>
     <footer class="mt-auto py-10 text-center">
-        <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Корпоративный портал • Конькова Дарья • 2025</p>
+        <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Корпоративный портал • Коньюкова Дарья Дмитриевна • 2025</p>
     </footer>
 </main>
 

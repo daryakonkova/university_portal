@@ -269,7 +269,7 @@ try {
 </script>
 
 <footer class="mt-20 py-10 text-center">
-    <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Университетская информационная система  • Конькова Дарья • 2025</p>
+    <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Университетская информационная система  • Коньюкова Дарья Дмитриевна • 2025</p>
 </footer>
 </body>
 </html>

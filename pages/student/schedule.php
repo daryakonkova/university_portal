@@ -19,7 +19,6 @@ $student = null;
 $groupedSchedule = ['ПН' => [], 'ВТ' => [], 'СР' => [], 'ЧТ' => [], 'ПТ' => [], 'СБ' => []];
 
 try {
-    // 1. Get student profile and group information
     $stmt = $pdo->prepare("
         SELECT s.id, s.full_name, s.group_id, g.group_name 
         FROM students s 
@@ -35,7 +34,6 @@ try {
 
     $groupId = $student['group_id'];
 
-    // 2. Fetch the full schedule for the student's group
     $scheduleStmt = $pdo->prepare("
         SELECT 
             s.id, 
@@ -55,7 +53,6 @@ try {
     $scheduleStmt->execute([$groupId]);
     $scheduleItems = $scheduleStmt->fetchAll();
 
-    // Grouping by day of week
     foreach ($scheduleItems as $item) {
         $groupedSchedule[$item['day_of_week']][] = $item;
     }
@@ -220,7 +217,7 @@ $daysFullNames = [
     </main>
 
     <footer class="mt-auto py-10 text-center">
-        <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Корпоративный портал • Модуль "Расписание студента" • 2025</p>
+        <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Корпоративный портал • Коньюкова Дарья Дмитриевна • Модуль "Расписание студента" • 2025</p>
     </footer>
 </div>
 

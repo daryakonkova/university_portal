@@ -195,7 +195,7 @@ try {
 </div>
 
 <footer class="mt-12 text-center pb-8">
-    <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Личный кабинет сотрудника • Конькова Дарья • Система «Витте.Портал»</p>
+    <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Личный кабинет сотрудника • Коньюкова Дарья Дмитриевна • Система «Витте.Портал»</p>
 </footer>
 </body>
 </html>
