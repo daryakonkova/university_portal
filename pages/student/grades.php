@@ -253,7 +253,7 @@ function getGradeColor($grade) {
     </main>
 
     <footer class="mt-auto py-10 text-center">
-        <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Корпоративный портал • Модуль "Успеваемость" • 2025</p>
+        <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Корпоративный портал • Модуль "Успеваемость" • Конькова Дарья • 2025</p>
     </footer>
 </div>
 

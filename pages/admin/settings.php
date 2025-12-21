@@ -164,7 +164,9 @@ $currentUserName = $_SESSION['username'] ?? 'Администратор';
         </main>
     </div>
 </div>
-
+<footer class="mt-auto py-10 text-center">
+    <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Корпоративный портал • Конькова Дарья • 2025</p>
+</footer>
 <!-- Клиентская логика взаимодействия с API -->
 <script>
     document.getElementById('settingsForm').addEventListener('submit', async function(e) {

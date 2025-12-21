@@ -154,7 +154,9 @@ $currentUserName = $_SESSION['username'] ?? 'Администратор';
         </form>
     </div>
 </div>
-
+<footer class="mt-auto py-10 text-center">
+    <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Корпоративный портал • Конькова Дарья • 2025</p>
+</footer>
 <script>
     let allUsers = [];
 
